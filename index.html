@@ -1,0 +1,67 @@
+<!doctype html>  
+<html lang="en">  
+    <head>
+
+    </head>
+    <body>
+        <h1 style="position:relative;left:50%">Chat</h1>
+        <div id="future"></div>
+        <form id="form" id="chat_form">
+            <input id="chat_input" type="text" style="width:90%">
+            <input type="submit" value="Send">
+        </form>
+         <script src="/jquery/dist/jquery.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        
+        <script>
+            window.alert("eyee")
+            $("#form").attr("autocomplete", "off");
+
+            var d=new Date();
+            var socket=io.connect('https://limit-doctor-4200.codio.io')
+            var isFirstMessage=false;
+            var myName;
+            socket.on("connect",function(data){
+                socket.emit('join','Hello from client')
+                isFirstMessage=true;
+            })
+            
+            socket.on('broad',function(data){
+                var parseInfo=JSON.parse(data)
+                $('#future').append(parseInfo.name+' [<i>'+parseInfo.date+'</i>]'+" : "+parseInfo.msg+'<br/>');
+            })
+            
+            $('#form').submit(function(e){
+                e.preventDefault();
+                
+                var message=$('#chat_input').val();
+                var myDate=d.getHours()+":"+d.getMinutes();
+                
+                if(message!==""){
+                    if(isFirstMessage){
+                        myName=message;
+                        isFirstMessage=false;
+                        socket.emit('nameSet',message)
+                    }else{
+                        var constructedMessage={
+                            msg:message,
+                            name:myName,
+                            date:myDate
+                        }
+                        var temp=JSON.stringify(constructedMessage);
+                        socket.emit('messages',temp);
+                    }
+                }
+                $('#form').each(function(){
+                    this.reset();
+                })
+            })
+            
+            socket.on('nameAssign',function(data){
+                $('#future').append(data+"<br/>")
+            })
+            
+        </script>
+        
+    </body>
+</html>  
